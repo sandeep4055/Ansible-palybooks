@@ -1,0 +1,59 @@
+- hosts: local
+  tasks:
+          - name: Add repository
+            yum_repository:
+              name: docker
+              description: DOCKER YUM repo
+              baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+              gpgcheck: no
+
+          - name: "Installing docker"
+            command: "yum install docker-ce --nobest --skip-broken -y"
+                
+          - name: To start docker service
+            service:
+                    name: "docker"
+                    state: started
+                    enabled: yes
+
+          - name: "Installing python on local node"
+            package:
+                   name: python3
+                   state: present
+
+          - name: "Installing docker software development kit"
+            command: pip3 install docker  
+
+          - name: Pulling HTTPD image from docker hub
+            docker_image:
+                    name: httpd
+                    source: pull
+          
+          - name: "Creating directory"
+            file: 
+                path: "/var/www/html"
+                state: directory
+
+          - name: "creating HTML file"
+            copy: 
+                dest: /var/www/html/index.html
+                content: "<b>HELLO WORLD!!!!</b>"
+          - name: Launching docker container and exposing port
+            docker_container:
+                    name: mydocker
+                    image: httpd
+                    exposed_ports:
+                            - 80
+                    ports:
+                            - 6093:80
+                    volumes:
+                            - "/var/www/html:/usr/local/apache2/htdocs"
+                    state: started
+
+          - name: "Stopping firewall of target node"
+            service:
+                    name: "firewalld"
+                    state: stopped
+
+
+
